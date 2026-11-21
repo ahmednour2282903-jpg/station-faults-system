@@ -1,44 +1,57 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>سجل الأعمال اليومية لمحطات توشكى - قسم I&C</title>
+  <title>Daily Operations Log - Toshka Stations - I&C Dept</title>
   <style>
     :root {
-      --bg-light: #f4f7f6;
+      --bg-dark: #f1f5f9;
       --card-bg: #ffffff;
-      --primary-color: #00796b;
-      --primary-hover: #004d40;
-      --secondary-color: #00bcd4;
-      --text-color: #212121;
-      --text-muted: #757575;
-      --border-color: #e0e0e0;
-      --critical-bg: #ffebee;
-      --critical-text: #c62828;
-      --action-close: #2e7d32;
+      --primary-color: #0284c7;
+      --primary-hover: #0369a1;
+      --secondary-color: #38bdf8;
+      --text-color: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --open-bg: #e0f2fe;
+      --open-text: #0369a1;
+      --closed-bg: #f1f5f9;
+      --closed-text: #475569;
+      --hw-bg: #e0e7ff;
+      --hw-text: #4338ca;
+      --spares-bg: #ffedd5;
+      --spares-text: #c2410c;
     }
 
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: var(--bg-light); color: var(--text-color); margin: 0; padding: 20px; }
+    body { background-color: var(--bg-dark); color: var(--text-color); margin: 0; padding: 20px; }
 
     /* Login Overlay */
     #loginOverlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 121, 107, 0.95); display: flex; justify-content: center;
+      background: #0f172a; display: flex; justify-content: center;
       align-items: center; z-index: 10000;
     }
     .login-card {
       background: var(--card-bg); padding: 30px; border-radius: 12px;
-      width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); text-align: center;
+      width: 100%; max-width: 360px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center;
+      border: 1px solid var(--border-color);
     }
-    .login-card h2 { color: var(--primary-color); margin-top: 0; }
-    .login-input { margin-bottom: 20px; text-align: right; }
-    .login-input label { display: block; margin-bottom: 8px; font-weight: bold; }
+    .login-card h2 { color: var(--primary-color); margin-top: 0; font-size: 24px; }
+    .login-input { margin-bottom: 20px; text-align: left; }
+    .login-input label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
     .login-input input {
       width: 100%; padding: 12px; border: 1px solid var(--border-color);
-      border-radius: 6px; font-size: 16px;
+      border-radius: 6px; font-size: 14px; background: #f8fafc;
     }
+    .login-card button {
+      background-color: var(--primary-color); color: white; padding: 12px;
+      border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;
+      width: 100%; transition: background 0.2s;
+    }
+    .login-card button:hover { background-color: var(--primary-hover); }
+    .login-footer { margin-top: 25px; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 15px; font-weight: 500; }
 
     .container { max-width: 1200px; margin: 0 auto; }
     
@@ -46,340 +59,286 @@
     .header-panel {
       background: var(--card-bg); border-radius: 12px; padding: 20px;
       margin-bottom: 20px; display: flex; align-items: center; gap: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-right: 5px solid var(--primary-color);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border-color);
     }
     .header-img {
-      width: 120px; height: 120px; border-radius: 8px; object-fit: cover;
+      width: 110px; height: 110px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color);
     }
-    .header-text h1 { margin: 0 0 5px 0; color: var(--primary-color); font-size: 24px; }
-    .header-text h3 { margin: 0 0 10px 0; color: var(--secondary-color); font-size: 18px; }
-    .supervisors { display: flex; gap: 15px; font-weight: bold; color: var(--text-muted); }
+    .header-text { flex-grow: 1; text-align: center; }
+    .header-text h1 { margin: 0 0 6px 0; color: var(--primary-color); font-size: 26px; font-weight: 700; }
+    .header-text h3 { margin: 0 0 12px 0; color: var(--text-muted); font-size: 18px; font-weight: 600; }
+    .supervisors { display: flex; justify-content: center; gap: 15px; font-size: 14px; font-weight: 600; }
     .supervisor-tag {
-      background: #e0f2f1; padding: 5px 12px; border-radius: 20px; color: var(--primary-color);
-      display: inline-flex; align-items: center; gap: 6px;
+      background: #e0f2fe; padding: 6px 14px; border-radius: 20px; color: #0369a1; border: 1px solid #bae6fd;
     }
 
     /* KPI Section */
-    .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-    .kpi-card { background: var(--card-bg); padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-    .kpi-card h4 { margin: 0 0 10px 0; color: var(--text-muted); font-size: 14px; text-transform: uppercase; }
-    .kpi-value { font-size: 28px; font-weight: bold; color: var(--primary-color); }
+    .kpi-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+    .kpi-card { background: var(--card-bg); padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
+    .kpi-card h4 { margin: 0 0 8px 0; color: var(--text-muted); font-size: 13px; text-transform: uppercase; font-weight: 600; }
+    .kpi-value { font-size: 28px; font-weight: 700; color: var(--primary-color); }
 
     /* Form Section */
-    .form-panel { background: var(--card-bg); padding: 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-    .form-panel h2 { margin-top: 0; color: var(--primary-color); border-bottom: 2px solid var(--bg-light); padding-bottom: 10px; }
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
-    .form-group { margin-bottom: 15px; }
-    .form-group.full-width { grid-column: 1 / -1; }
-    label { display: block; margin-bottom: 6px; font-weight: 600; color: var(--text-color); }
+    .form-panel { background: var(--card-bg); padding: 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
+    .form-panel h2 { margin-top: 0; color: var(--primary-color); font-size: 20px; border-bottom: 2px solid var(--bg-dark); padding-bottom: 12px; margin-bottom: 20px; }
+    .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+    .form-group { margin-bottom: 0; }
+    .form-group.span-2 { grid-column: span 2; }
+    .form-group.span-4 { grid-column: span 4; }
+    label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--text-color); }
     input, select, textarea {
-      width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px;
-      font-size: 14px; background-color: #fafafa; transition: border-color 0.3s;
+      width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;
+      font-size: 14px; background-color: #f8fafc; transition: border 0.2s;
     }
-    input:focus, select:focus, textarea:focus {
-      outline: none; border-color: var(--primary-color); background-color: #fff;
-    }
-    textarea { height: 100px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-color); background: #fff; }
+    textarea { height: 70px; resize: vertical; }
     
-    .checkbox-group { display: flex; gap: 20px; align-items: center; padding: 10px 0; }
-    .checkbox-group label { display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; }
-
-    button {
-      background-color: var(--primary-color); color: white; padding: 14px 28px;
+    .form-actions { grid-column: span 4; margin-top: 10px; }
+    .form-actions button {
+      background-color: var(--primary-color); color: white; padding: 12px 24px;
       border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;
-      transition: background-color 0.3s, transform 0.1s; width: 100%;
+      width: 100%; transition: background 0.2s;
     }
-    button:hover { background-color: var(--primary-hover); }
-    button:active { transform: scale(0.98); }
+    .form-actions button:hover { background-color: var(--primary-hover); }
 
     /* Table Section */
-    .table-panel { background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-    .table-panel h2 { margin-top: 0; color: var(--primary-color); display: flex; justify-content: space-between; align-items: center; }
-    .filters { margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
-    .filters input, .filters select { flex: 1; min-width: 150px; }
+    .table-panel { background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
+    .table-panel h2 { margin-top: 0; color: var(--primary-color); font-size: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg-dark); padding-bottom: 12px; margin-bottom: 20px; }
+    .filters { display: flex; gap: 10px; }
+    .filters input, .filters select { width: 160px; padding: 8px 12px; font-size: 13px; }
+    .filters button { padding: 8px 16px; font-size: 13px; border-radius: 6px; }
 
     .table-responsive { width: 100%; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 1100px; text-align: right; }
-    th { background-color: var(--bg-light); color: var(--text-color); padding: 12px; border-bottom: 2px solid var(--border-color); font-weight: 600; }
-    td { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 14px; vertical-align: middle; }
-    tr:hover { background-color: #f5f5f5; }
+    table { width: 100%; border-collapse: collapse; min-width: 1100px; text-align: left; font-size: 13px; }
+    th { background-color: #f8fafc; color: var(--text-color); padding: 14px 10px; border-bottom: 2px solid var(--border-color); font-weight: 600; }
+    td { padding: 14px 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; color: #334155; }
+    tr:hover { background-color: #f8fafc; }
 
-    .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; text-align: center; }
-    .status-open { background-color: #e3f2fd; color: #1565c0; }
-    .status-progress { background-color: #fff8e1; color: #f57f17; }
-    .status-closed { background-color: #e8f5e9; color: #2e7d32; }
-    .priority-critical { background-color: var(--critical-bg); color: var(--critical-text); font-weight: bold; }
-    .spares-yes { background-color: #ffe0b2; color: #e65100; }
-    .spares-no { background-color: #cfd8dc; color: #37474f; }
+    .badge { padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: 600; display: inline-block; text-align: center; }
+    .status-open { background-color: var(--open-bg); color: var(--open-text); border: 1px solid #bae6fd; }
+    .status-closed { background-color: var(--closed-bg); color: var(--closed-text); border: 1px solid #cbd5e1; }
+    .type-hw { background-color: var(--hw-bg); color: var(--hw-text); }
+    .type-spares { background-color: var(--spares-bg); color: var(--spares-text); }
 
-    .action-btn {
-      padding: 6px 12px; border-radius: 4px; border: none; font-size: 12px; cursor: pointer;
-      font-weight: bold; margin-left: 5px; color: white;
-    }
-    .btn-close { background-color: var(--action-close); }
-    .btn-delete { background-color: #d32f2f; }
+    .action-btn { padding: 6px 12px; border-radius: 4px; border: none; font-size: 12px; cursor: pointer; font-weight: 600; color: white; transition: opacity 0.2s; }
+    .action-btn:hover { opacity: 0.9; }
+    .btn-close { background-color: #059669; }
+    .btn-delete { background-color: #e11d48; margin-left: 6px; }
 
-    .print-only { display: none; }
+    .print-hide {}
     @media print {
       body { background: white; padding: 0; }
       #loginOverlay, .form-panel, .action-btn, .print-hide { display: none !important; }
-      .print-only { display: block; margin-bottom: 20px; text-align: center; }
       .container { max-width: 100%; margin: 0; }
-      .header-panel { border-right: none; border-bottom: 2px solid #000; }
+      .header-panel { border-left: none; border-bottom: 2px solid #0f172a; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Login Modal -->
   <div id="loginOverlay">
     <div class="login-card">
-      <h2>دخول النظام</h2>
-      <p>الرجاء إدخال بيانات الاعتماد</p>
+      <h2>System Login</h2>
+      <p style="color: var(--text-muted); margin-bottom: 20px;">Please enter your credentials</p>
       <div class="login-input">
-        <label>اسم المستخدم</label>
-        <input type="text" id="userIn" placeholder="أدخل اسم المستخدم">
+        <label>Username</label>
+        <input type="text" id="userIn">
       </div>
       <div class="login-input">
-        <label>كلمة المرور</label>
-        <input type="password" id="passIn" placeholder="أدخل كلمة المرور">
+        <label>Password</label>
+        <input type="password" id="passIn">
       </div>
-      <button onclick="handleLogin()">دخول</button>
-      <p style="font-size: 12px; color: var(--text-muted); margin-top: 15px;">بيانات الدخول الافتراضية: admin / admin</p>
+      <button onclick="handleLogin()">Enter</button>
+      <div class="login-footer">Implemented by Ahmed Nour</div>
     </div>
   </div>
 
   <div class="container">
-    <!-- Header Panel -->
     <div class="header-panel">
       <img src="https://images.unsplash.com/photo-1590856029826-c7a73142bfa1?auto=format&fit=crop&w=400&q=80" alt="Pump Station" class="header-img">
       <div class="header-text">
-        <h1>سجل الأعمال اليومية لمحطات توشكى</h1>
-        <h3>قسم التحكم والأجهزة (I&C)</h3>
+        <h1>Daily Operations Log - Toshka Stations</h1>
+        <h3>Instrumentation & Control Department</h3>
         <div class="supervisors">
-          <span class="supervisor-tag">مشرف: محمود حمدان</span>
-          <span class="supervisor-tag">مشرف: أحمد نور</span>
+          <span class="supervisor-tag">Supervisor: Mahmoud Hamdan</span>
+          <span class="supervisor-tag">Supervisor: Ahmed Nour</span>
         </div>
       </div>
     </div>
 
-    <!-- Print Only Header -->
-    <div class="print-only">
-      <h2>سجل الأعمال اليومية لمحطات توشكى - قسم I&C</h2>
-      <p>المشرفون: محمود حمدان | أحمد نور</p>
-    </div>
-
-    <!-- KPI Section -->
     <div class="kpi-container">
-      <div class="kpi-card"><h4>إجمالي الأعمال</h4><div id="kpiTotal" class="kpi-value">0</div></div>
-      <div class="kpi-card"><h4>مفتوح</h4><div id="kpiOpen" class="kpi-value" style="color: #1565c0;">0</div></div>
-      <div class="kpi-card"><h4>جاري العمل</h4><div id="kpiProgress" class="kpi-value" style="color: #f57f17;">0</div></div>
-      <div class="kpi-card"><h4>مغلق</h4><div id="kpiClosed" class="kpi-value" style="color: #2e7d32;">0</div></div>
-      <div class="kpi-card"><h4>أعمال اليوم</h4><div id="kpiToday" class="kpi-value" style="color: #00796b;">0</div></div>
+      <div class="kpi-card"><h4>Total Tasks</h4><div id="kpiTotal" class="kpi-value">0</div></div>
+      <div class="kpi-card"><h4>Open</h4><div id="kpiOpen" class="kpi-value">0</div></div>
+      <div class="kpi-card"><h4>Closed</h4><div id="kpiClosed" class="kpi-value">0</div></div>
+      <div class="kpi-card"><h4>Tasks Today</h4><div id="kpiToday" class="kpi-value" style="color: #0284c7;">0</div></div>
     </div>
 
-    <!-- Form Panel -->
     <div class="form-panel print-hide">
-      <h2>تسجيل عمل / عطل جديد</h2>
+      <h2>Log New Task / Fault</h2>
       <form id="workForm" onsubmit="handleFormSubmit(event)">
         <div class="form-grid">
           <div class="form-group">
-            <label for="recordDate">التاريخ *</label>
-            <input type="date" id="recordDate" required>
+            <label for="startDate">Start Date *</label>
+            <input type="date" id="startDate" required>
           </div>
           <div class="form-group">
-            <label for="recordTime">الوقت *</label>
-            <input type="time" id="recordTime" required>
+            <label for="endDate">End Date *</label>
+            <input type="date" id="endDate" required>
           </div>
           <div class="form-group">
-            <label for="stationName">اسم المحطة *</label>
-            <input type="text" id="stationName" placeholder="أدخل اسم المحطة" required>
+            <label for="zoneName">Zone *</label>
+            <input type="text" id="zoneName" required>
           </div>
           <div class="form-group">
-            <label for="equipmentName">المعدة *</label>
-            <input type="text" id="equipmentName" placeholder="أدخل اسم المعدة" required>
+            <label for="stationName">Station *</label>
+            <input type="text" id="stationName" required>
           </div>
-          <div class="form-group">
-            <label for="technicianName">الفني المسؤول *</label>
-            <input type="text" id="technicianName" placeholder="أدخل اسم الفني" required>
+          
+          <div class="form-group span-2">
+            <label for="locationDetailed">Location Detailed *</label>
+            <input type="text" id="locationDetailed" required>
           </div>
-          <div class="form-group">
-            <label for="workCategory">التصنيف *</label>
-            <select id="workCategory">
-              <option value="I&C">I&C</option>
-              <option value="كهرباء">كهرباء</option>
-              <option value="ميكانيكا">ميكانيكا</option>
-            </select>
+          <div class="form-group span-2">
+            <label for="equipmentName">Equipment *</label>
+            <input type="text" id="equipmentName" required>
           </div>
+
           <div class="form-group">
-            <label for="faultStatus">الحالة *</label>
+            <label for="faultStatus">Status *</label>
             <select id="faultStatus" onchange="toggleCloseActions()">
-              <option value="مفتوح">مفتوح</option>
-              <option value="جاري العمل">جاري العمل</option>
-              <option value="مغلق">مغلق</option>
+              <option value="Open">Open</option>
+              <option value="Closed">Closed</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="workPriority">الأولوية *</label>
-            <select id="workPriority">
-              <option value="عادية">عادية</option>
-              <option value="حرجة">حرجة (Critical)</option>
+            <label for="issueType">Issue Type *</label>
+            <select id="issueType">
+              <option value="Hardware">Hardware</option>
+              <option value="Spare Parts">Spare Parts</option>
             </select>
           </div>
-          <div class="checkbox-group full-width">
-            <label>
-              <input type="checkbox" id="needsSpares"> هل يحتاج قطع غيار؟
-            </label>
+          <div class="form-group span-2">
+            <label for="technicianName">Technician *</label>
+            <input type="text" id="technicianName" required>
           </div>
-          <div class="form-group full-width">
-            <label for="faultDescription">وصف العطل / المشكلة *</label>
-            <textarea id="faultDescription" placeholder="اكتب تفاصيل العطل..." required></textarea>
+
+          <div class="form-group span-4">
+            <label for="faultDescription">Description of Fault / Problem *</label>
+            <textarea id="faultDescription" required></textarea>
           </div>
-          <div class="form-group full-width" id="actionTakenGroup" style="display: none;">
-            <label for="actionTaken">ما تم إجراؤه (الإجراء المتخذ) *</label>
-            <textarea id="actionTaken" placeholder="اكتب ما تم حله بالتفصيل..."></textarea>
+          <div class="form-group span-4" id="actionTakenGroup" style="display: none;">
+            <label for="actionTaken">Actions Taken *</label>
+            <textarea id="actionTaken"></textarea>
+          </div>
+          
+          <div class="form-actions">
+            <button type="submit">Submit Record</button>
           </div>
         </div>
-        <button type="submit">حفظ السجل</button>
       </form>
     </div>
 
-    <!-- Table Panel -->
     <div class="table-panel">
       <h2>
-        <span>سجل الأعمال اليومية</span>
+        <span>Daily Operations Log</span>
         <div class="filters print-hide">
           <input type="date" id="filterDate" onchange="filterRecords()">
-          <input type="text" id="filterSearch" placeholder="بحث عام (محطة، معدة، فني)..." onkeyup="filterRecords()">
-          <button onclick="exportCSV()" style="width: auto; background-color: var(--secondary-color);">تصدير CSV</button>
-          <button onclick="window.print()" style="width: auto; background-color: #3f51b5;">طباعة</button>
+          <input type="text" id="filterSearch" placeholder="Search..." onkeyup="filterRecords()">
+          <button onclick="exportCSV()" style="background-color: #475569; color: white; border: none; cursor: pointer;">Export CSV</button>
+          <button onclick="window.print()" style="background-color: var(--primary-color); color: white; border: none; cursor: pointer;">Print</button>
         </div>
       </h2>
       <div class="table-responsive">
         <table>
           <thead>
             <tr>
-              <th>التاريخ والوقت</th>
-              <th>المحطة</th>
-              <th>المعدة</th>
-              <th>الفني</th>
-              <th>التصنيف</th>
-              <th>الحالة</th>
-              <th>الأولوية</th>
-              <th>قطع غيار</th>
-              <th>وصف العطل</th>
-              <th>الإجراء المتخذ</th>
-              <th class="print-hide">تحكم</th>
+              <th>Dates</th>
+              <th>Zone/Station</th>
+              <th>Location</th>
+              <th>Equipment</th>
+              <th>Fault</th>
+              <th>Tech</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Action Taken</th>
+              <th class="print-hide">Control</th>
             </tr>
           </thead>
-          <tbody id="recordsBody">
-            <!-- Rows will be injected here -->
-          </tbody>
+          <tbody id="recordsBody"></tbody>
         </table>
       </div>
     </div>
   </div>
 
   <script>
-    // --- Configuration & Security ---
-    const CONFIG = {
-      username: "admin",
-      password: "admin",
-      storageKey: "tuskh_ic_ daily_records_v1"
-    };
-
+    const CONFIG = { username: "admin", password: "admin", storageKey: "toshka_ic_luxury_records_v1" };
     let records = [];
 
-    // --- Initialization ---
     window.onload = function() {
       const today = new Date().toISOString().split('T')[0];
-      const time = new Date().toTimeString().substring(0,5);
-      document.getElementById('recordDate').value = today;
-      document.getElementById('recordTime').value = time;
+      document.getElementById('startDate').value = today;
+      document.getElementById('endDate').value = today;
       document.getElementById('filterDate').value = today;
-      
       loadRecords();
     };
 
     function handleLogin() {
-      const u = document.getElementById('userIn').value;
-      const p = document.getElementById('passIn').value;
-      if (u === CONFIG.username && p === CONFIG.password) {
+      if (document.getElementById('userIn').value === CONFIG.username && document.getElementById('passIn').value === CONFIG.password) {
         document.getElementById('loginOverlay').style.display = 'none';
       } else {
-        alert('اسم المستخدم أو كلمة المرور غير صحيحة.');
+        alert('Invalid credentials.');
       }
     }
 
-    // --- Logic ---
     function toggleCloseActions() {
-      const status = document.getElementById('faultStatus').value;
-      const group = document.getElementById('actionTakenGroup');
-      const actionInput = document.getElementById('actionTaken');
-      if (status === 'مغلق') {
-        group.style.display = 'block';
-        actionInput.required = true;
+      const g = document.getElementById('actionTakenGroup');
+      const a = document.getElementById('actionTaken');
+      if (document.getElementById('faultStatus').value === 'Closed') {
+        g.style.display = 'block'; a.required = true;
       } else {
-        group.style.display = 'none';
-        actionInput.required = false;
-        actionInput.value = '';
+        g.style.display = 'none'; a.required = false; a.value = '';
       }
     }
 
     function handleFormSubmit(e) {
       e.preventDefault();
-      
       const newRecord = {
         id: 'rec_' + Date.now(),
-        date: document.getElementById('recordDate').value,
-        time: document.getElementById('recordTime').value,
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value,
+        zone: document.getElementById('zoneName').value,
         station: document.getElementById('stationName').value,
+        location: document.getElementById('locationDetailed').value,
         equipment: document.getElementById('equipmentName').value,
-        technician: document.getElementById('technicianName').value,
-        category: document.getElementById('workCategory').value,
         status: document.getElementById('faultStatus').value,
-        priority: document.getElementById('workPriority').value,
-        needsSpares: document.getElementById('needsSpares').checked,
+        issueType: document.getElementById('issueType').value,
+        technician: document.getElementById('technicianName').value,
         description: document.getElementById('faultDescription').value,
-        actionTaken: document.getElementById('actionTaken').value || 'لا يوجد إجراء حتى الآن'
+        actionTaken: document.getElementById('actionTaken').value || 'Pending action'
       };
-
       records.unshift(newRecord);
       saveRecords();
       renderTable();
       document.getElementById('workForm').reset();
       toggleCloseActions();
       const today = new Date().toISOString().split('T')[0];
-      const time = new Date().toTimeString().substring(0,5);
-      document.getElementById('recordDate').value = today;
-      document.getElementById('recordTime').value = time;
+      document.getElementById('startDate').value = today;
+      document.getElementById('endDate').value = today;
     }
 
-    function saveRecords() {
-      localStorage.setItem(CONFIG.storageKey, JSON.stringify(records));
-    }
-
-    function loadRecords() {
-      const data = localStorage.getItem(CONFIG.storageKey);
-      records = data ? JSON.parse(data) : [];
-      renderTable();
-    }
+    function saveRecords() { localStorage.setItem(CONFIG.storageKey, JSON.stringify(records)); }
+    function loadRecords() { records = JSON.parse(localStorage.getItem(CONFIG.storageKey) || "[]"); renderTable(); }
 
     function closeRecord(id) {
-      const record = records.find(r => r.id === id);
-      if (record) {
-        const action = prompt("يرجى إدخال الإجراء المتخذ لإغلاق العطل:");
-        if (action) {
-          record.status = 'مغلق';
-          record.actionTaken = action;
-          saveRecords();
-          renderTable();
-        }
+      const r = records.find(r => r.id === id);
+      if (r) {
+        const act = prompt("Enter action taken to close fault:");
+        if (act) { r.status = 'Closed'; r.actionTaken = act; saveRecords(); renderTable(); }
       }
     }
 
     function deleteRecord(id) {
-      if (confirm('هل أنت متأكد من حذف هذا السجل؟')) {
+      if (confirm('Delete this record?')) {
         records = records.filter(r => r.id !== id);
         saveRecords();
         renderTable();
@@ -390,35 +349,29 @@
       const list = dataToRender || records;
       const tbody = document.getElementById('recordsBody');
       tbody.innerHTML = '';
-
-      let total = list.length;
-      let open = 0, progress = 0, closed = 0;
+      let total = list.length, open = 0, closed = 0;
       const today = document.getElementById('filterDate').value;
       let todayCount = 0;
 
       list.forEach(r => {
-        if(r.status === 'مفتوح') open++;
-        if(r.status === 'جاري العمل') progress++;
-        if(r.status === 'مغلق') closed++;
-        if(r.date === today) todayCount++;
+        if(r.status === 'Open') open++;
+        if(r.status === 'Closed') closed++;
+        if(r.endDate === today) todayCount++;
 
         const tr = document.createElement('tr');
-        if(r.priority === 'حرجة') tr.style.backgroundColor = 'var(--critical-bg)';
-
         tr.innerHTML = `
-          <td>${r.date}<br><small style="color:var(--text-muted)">${r.time}</small></td>
-          <td><strong>${r.station}</strong></td>
+          <td>${r.startDate}<br><small style="color:var(--text-muted)">to ${r.endDate}</small></td>
+          <td><strong>${r.zone}</strong><br>${r.station}</td>
+          <td>${r.location}</td>
           <td>${r.equipment}</td>
-          <td>${r.technician}</td>
-          <td>${r.category}</td>
-          <td><span class="badge status-${getStatusClass(r.status)}">${r.status}</span></td>
-          <td><span class="${r.priority === 'حرجة' ? 'priority-critical' : ''}">${r.priority}</span></td>
-          <td><span class="badge ${r.needsSpares ? 'spares-yes' : 'spares-no'}">${r.needsSpares ? 'نعم' : 'لا'}</span></td>
           <td>${r.description}</td>
+          <td>${r.technician}</td>
+          <td><span class="badge type-${r.issueType === 'Hardware' ? 'hw' : 'spares'}">${r.issueType}</span></td>
+          <td><span class="badge status-${r.status.toLowerCase()}">${r.status}</span></td>
           <td>${r.actionTaken}</td>
           <td class="print-hide">
-            ${r.status !== 'مغلق' ? `<button class="action-btn btn-close" onclick="closeRecord('${r.id}')">إغلاق</button>` : ''}
-            <button class="action-btn btn-delete" onclick="deleteRecord('${r.id}')">حذف</button>
+            ${r.status !== 'Closed' ? `<button class="action-btn btn-close" onclick="closeRecord('${r.id}')">Done</button>` : ''}
+            <button class="action-btn btn-delete" onclick="deleteRecord('${r.id}')">Delete</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -426,53 +379,38 @@
 
       document.getElementById('kpiTotal').innerText = total;
       document.getElementById('kpiOpen').innerText = open;
-      document.getElementById('kpiProgress').innerText = progress;
       document.getElementById('kpiClosed').innerText = closed;
       document.getElementById('kpiToday').innerText = todayCount;
-    }
-
-    function getStatusClass(status) {
-      if(status === 'مفتوح') return 'open';
-      if(status === 'جاري العمل') return 'progress';
-      return 'closed';
     }
 
     function filterRecords() {
       const dateVal = document.getElementById('filterDate').value;
       const searchVal = document.getElementById('filterSearch').value.toLowerCase();
-
       const filtered = records.filter(r => {
-        const matchesDate = !dateVal || r.date === dateVal;
+        const matchesDate = !dateVal || r.endDate === dateVal;
         const matchesSearch = !searchVal || 
-          r.station.toLowerCase().includes(searchVal) ||
-          r.equipment.toLowerCase().includes(searchVal) ||
-          r.technician.toLowerCase().includes(searchVal) ||
+          r.station.toLowerCase().includes(searchVal) || r.zone.toLowerCase().includes(searchVal) ||
+          r.equipment.toLowerCase().includes(searchVal) || r.technician.toLowerCase().includes(searchVal) ||
           r.description.toLowerCase().includes(searchVal);
         return matchesDate && matchesSearch;
       });
-
       renderTable(filtered);
     }
 
     function exportCSV() {
-      if(records.length === 0) {
-        alert("لا توجد بيانات للتصدير.");
-        return;
-      }
-      let csvContent = "\uFEFF"; // BOM for Arabic encoding
-      const headers = ["التاريخ", "الوقت", "المحطة", "المعدة", "الفني", "التصنيف", "الحالة", "الأولوية", "قطع غيار", "وصف العطل", "الإجراء المتخذ"];
-      csvContent += headers.join(",") + "\n";
-
+      if(records.length === 0) { alert("No data to export."); return; }
+      let csvContent = "\uFEFF"; 
+      const headers = ["Start Date", "End Date", "Zone", "Station", "Location", "Equipment", "Status", "Issue Type", "Technician", "Description", "Action Taken"];
+      csvContent += headers.join(",") + "\r\n";
       records.forEach(r => {
-        const row = [r.date, r.time, r.station, r.equipment, r.technician, r.category, r.status, r.priority, r.needsSpares ? 'نعم' : 'لا', `"${r.description.replace(/"/g, '""')}"`, `"${r.actionTaken.replace(/"/g, '""')}"`];
-        csvContent += row.join(",") + "\n";
+        const row = [r.startDate, r.endDate, r.zone, r.station, r.location, r.equipment, r.status, r.issueType, r.technician, `"${r.description.replace(/"/g, '""')}"`, `"${r.actionTaken.replace(/"/g, '""')}"`];
+        csvContent += row.join(",") + "\r\n";
       });
-
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `سجل_أعمال_توشكى_${document.getElementById('filterDate').value}.csv`);
+      link.setAttribute("download", `Toshka_IC_Daily_Log_${document.getElementById('filterDate').value}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
