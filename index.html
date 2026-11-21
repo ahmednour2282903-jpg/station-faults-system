@@ -151,3 +151,123 @@
       </table>
     </div>
   </div>
+  <script>
+    const STORAGE_KEY = "station_faults_v2";
+    let faults = [];
+
+    const form = document.getElementById("faultForm");
+    const tbody = document.getElementById("tbody");
+    const searchInput = document.getElementById("search");
+
+    function loadFaults() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        faults = data ? JSON.parse(data) : [];
+        if (!Array.isArray(faults)) faults = [];
+      } catch (err) {
+        faults = [];
+      }
+    }
+
+    function saveFaults() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(faults));
+    }
+
+    function updateCounters() {
+      document.getElementById("totalCount").textContent = faults.length;
+      document.getElementById("openCount").textContent = faults.filter(f => f.status === "مفتوح").length;
+      document.getElementById("progressCount").textContent = faults.filter(f => f.status === "جاري العمل").length;
+      document.getElementById("closedCount").textContent = faults.filter(f => f.status === "مغلق").length;
+    }
+
+    function escapeText(val) {
+      return String(val || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function renderTable() {
+      updateCounters();
+      const term = searchInput.value.trim().toLowerCase();
+
+      const list = faults.filter(f => {
+        if (!term) return true;
+        return [f.station, f.equipment, f.technician, f.faultType, f.notes]
+          .join(" ")
+          .toLowerCase()
+          .includes(term);
+      });
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#94a3b8;">لا توجد أعطال مسجلة</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map((f, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td><strong>${escapeText(f.station)}</strong></td>
+          <td>${escapeText(f.equipment)}</td>
+          <td>${escapeText(f.faultType)}</td>
+          <td>${escapeText(f.priority)}</td>
+          <td>${escapeText(f.status)}</td>
+          <td>${escapeText(f.technician || "-")}</td>
+          <td>${escapeText(f.notes || "-")}</td>
+          <td>
+            ${f.status !== "مغلق" ? `<button type="button" onclick="closeFault('${f.id}')">إغلاق</button>` : ""}
+            <button type="button" onclick="deleteFault('${f.id}')" style="background:#dc2626;">حذف</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const station = document.getElementById("station").value.trim();
+      const equipment = document.getElementById("equipment").value.trim();
+      if (!station || !equipment) return;
+
+      const item = {
+        id: String(Date.now()),
+        station,
+        equipment,
+        technician: document.getElementById("technician").value.trim(),
+        faultType: document.getElementById("faultType").value,
+        priority: document.getElementById("priority").value,
+        status: document.getElementById("status").value,
+        notes: document.getElementById("notes").value.trim()
+      };
+
+      faults.unshift(item);
+      saveFaults();
+      renderTable();
+      form.reset();
+      document.getElementById("priority").value = "متوسطة";
+      document.getElementById("status").value = "مفتوح";
+    });
+
+    window.closeFault = function (id) {
+      const target = faults.find(f => f.id === id);
+      if (target) {
+        target.status = "مغلق";
+        saveFaults();
+        renderTable();
+      }
+    };
+
+    window.deleteFault = function (id) {
+      faults = faults.filter(f => f.id !== id);
+      saveFaults();
+      renderTable();
+    };
+
+    searchInput.addEventListener("input", renderTable);
+
+    loadFaults();
+    renderTable();
+  </script>
+</body>
+</html>
