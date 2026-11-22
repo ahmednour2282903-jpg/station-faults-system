@@ -416,6 +416,18 @@
       document.body.removeChild(link);
     }
   </script>
-  ​<script src="firebase.js" type="module"></script>
+<script type="module">
+  import { db, ref, push, onValue } from "./firebase.js";
+
+  const faultsRef = ref(db, "faults");
+
+  onValue(faultsRef, (snapshot) => {
+    const data = snapshot.val() || {};
+    records = Object.values(data);
+    if (typeof renderTable === "function") {
+      renderTable(records);
+    }
+  });
+</script>
 </body>
 </html>
