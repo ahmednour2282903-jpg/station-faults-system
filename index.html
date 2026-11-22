@@ -1,83 +1,498 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>سجل الأعطال اليومي</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; }
-        div { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #666; }
-        input, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { width: 100%; background-color: #009688; color: white; padding: 10px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
-        button:hover { background-color: #00796b; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: right; }
-        th { background-color: #f2f2f2; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>منظومة متابعة أعطال المحطات والزونات</title>
+  <style>
+    :root {
+      --bg-dark: #070d19;
+      --bg-panel: #0e1729;
+      --bg-card: #131f36;
+      --border: #1e3252;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-dark: #0284c7;
+      --open-bg: rgba(239, 68, 68, 0.16);
+      --open-text: #f87171;
+      --open-border: rgba(239, 68, 68, 0.45);
+      --closed-bg: rgba(34, 197, 94, 0.16);
+      --closed-text: #4ade80;
+      --closed-border: rgba(34, 197, 94, 0.45);
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top right, #112240, var(--bg-dark) 60%);
+      color: var(--text);
+      padding: 16px;
+      min-height: 100vh;
+    }
+
+    .container { max-width: 1220px; margin: auto; }
+
+    .topbar {
+      background: linear-gradient(135deg, #0f1e38, #091222);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+    }
+
+    .topbar h1 { margin: 0; font-size: 21px; color: #f8fafc; letter-spacing: 0.2px; }
+    .topbar p { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+
+    .actions-top { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .btn {
+      border: 1px solid transparent;
+      border-radius: 9px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+      color: #fff;
+    }
+
+    .btn-primary { background: var(--accent-dark); border-color: var(--accent); width: 100%; padding: 12px; font-size: 15px; margin-top: 8px; }
+    .btn-primary:hover { background: #0369a1; }
+
+    .btn-summary { background: #1e293b; border-color: #38bdf8; color: #e0f2fe; }
+    .btn-summary:hover { background: #273549; }
+
+    .btn-export { background: #065f46; border-color: #10b981; color: #ecfdf5; }
+    .btn-export:hover { background: #047857; }
+
+    .btn-print { background: #312e81; border-color: #818cf8; color: #eef2ff; }
+    .btn-print:hover { background: #3730a3; }
+
+    .btn-close-fault { background: #15803d; border-color: #22c55e; padding: 6px 10px; font-size: 12px; }
+    .btn-close-fault:hover { background: #166534; }
+
+    .btn-delete { background: rgba(185, 28, 28, 0.25); border-color: #ef4444; color: #fca5a5; padding: 6px 9px; font-size: 12px; }
+    .btn-delete:hover { background: rgba(185, 28, 28, 0.45); }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .kpi {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 15px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent);
+    }
+
+    .kpi.open::before { background: #ef4444; }
+    .kpi.closed::before { background: #22c55e; }
+    .kpi.today::before { background: #f59e0b; }
+
+    .kpi span { font-size: 12px; color: var(--muted); display: block; }
+    .kpi strong { font-size: 26px; margin-top: 6px; display: block; color: #f8fafc; }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .panel-title {
+      margin: 0 0 14px;
+      font-size: 16px;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .grid-form {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .span-2 { grid-column: span 2; }
+    .span-full { grid-column: 1 / -1; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 11px;
+      border-radius: 8px;
+      border: 1px solid #263d63;
+      background: var(--bg-card);
+      color: #f8fafc;
+      font-size: 14px;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    }
+
+    textarea { min-height: 76px; resize: vertical; }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .table-box {
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+      font-size: 13px;
+    }
+
+    th {
+      background: #0b1324;
+      color: #93c5fd;
+      padding: 11px 10px;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(30, 50, 82, 0.65);
+      vertical-align: top;
+      color: #e2e8f0;
+    }
+
+    tr:hover td { background: rgba(56, 189, 248, 0.05); }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .badge-open {
+      background: var(--open-bg);
+      color: var(--open-text);
+      border-color: var(--open-border);
+    }
+
+    .badge-closed {
+      background: var(--closed-bg);
+      color: var(--closed-text);
+      border-color: var(--closed-border);
+    }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.78);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      max-width: 540px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-card h3 { margin: 0 0 12px; color: #f8fafc; font-size: 17px; }
+    .summary-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .kpis { grid-template-columns: repeat(2, 1fr); }
+      .grid-form { grid-template-columns: repeat(2, 1fr); }
+      .filters { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 560px) {
+      .kpis, .grid-form, .filters { grid-template-columns: 1fr; }
+      .span-2 { grid-column: span 1; }
+    }
+
+    @media print {
+      body { background: #fff; color: #000; padding: 0; }
+      .actions-top, .panel:first-of-type, .filters, .no-print { display: none !important; }
+      .panel { border: 1px solid #ccc; box-shadow: none; background: #fff; color: #000; }
+      th { background: #eee; color: #000; }
+      td { color: #000; }
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <header class="topbar">
+      <div>
+        <h1>منظومة متابعة أعطال وأعمال المحطات والزونات</h1>
+        <p>متابعة لحظية لحالة الأعطال (مفتوح / مقفول) وتوثيق أعمال الفنيين ومراجعة نهاية اليوم</p>
+      </div>
+      <div class="actions-top">
+        <button class="btn btn-summary" onclick="openEndOfDaySummary()">ملخص آخر اليوم</button>
+        <button class="btn btn-export" onclick="exportCSV()">تصدير Excel (CSV)</button>
+        <button class="btn btn-print" onclick="window.print()">طباعة التقرير</button>
+      </div>
+    </header>
 
-<div class="container">
-    <h2>تسجيل الأعطال اليومي</h2>
-    <div>
-        <label for="faultDate">التاريخ:</label>
-        <input type="date" id="faultDate">
-    </div>
-    <div>
-        <label for="faultDesc">وصف العطل:</label>
-        <textarea id="faultDesc" rows="4" placeholder="اكتب تفاصيل العطل هنا..."></textarea>
-    </div>
-    <button onclick="saveFault()">حفظ العطل</button>
+    <section class="kpis">
+      <div class="kpi">
+        <span>إجمالي السجلات</span>
+        <strong id="kpiTotal">0</strong>
+      </div>
+      <div class="kpi open">
+        <span>أعطال مفتوحة</span>
+        <strong id="kpiOpen" style="color:#f87171">0</strong>
+      </div>
+      <div class="kpi closed">
+        <span>أعطال مقفولة (تم الإنجاز)</span>
+        <strong id="kpiClosed" style="color:#4ade80">0</strong>
+      </div>
+      <div class="kpi today">
+        <span>أعمال اليوم</span>
+        <strong id="kpiToday" style="color:#fbbf24">0</strong>
+      </div>
+    </section>
 
-    <h3>الأعطال المسجلة</h3>
-    <table>
-        <thead>
+    <section class="panel">
+      <h2 class="panel-title">تسجيل عطل أو تحديث عمل تم إنجازه بالمحطة</h2>
+      <form id="faultForm">
+        <div class="grid-form">
+          <div>
+            <label for="faultDate">التاريخ</label>
+            <input type="date" id="faultDate" required />
+          </div>
+          <div>
+            <label for="faultTime">الوقت</label>
+            <input type="time" id="faultTime" required />
+          </div>
+          <div>
+            <label for="zoneName">اسم الزونة</label>
+            <input type="text" id="zoneName" list="zonesList" placeholder="اختر أو اكتب الزونة" required />
+            <datalist id="zonesList">
+              <option value="زونة 1"></option>
+              <option value="زونة 2"></option>
+              <option value="زونة 3"></option>
+              <option value="الخط الرئيسي"></option>
+            </datalist>
+          </div>
+          <div>
+            <label for="stationName">اسم المحطة</label>
+            <input type="text" id="stationName" list="stationsList" placeholder="اختر أو اكتب المحطة" required />
+            <datalist id="stationsList">
+              <option value="محطة رفع 1"></option>
+              <option value="محطة رفع 2"></option>
+              <option value="محطة المياه الرئيسية"></option>
+              <option value="محطة واتر هامر 1"></option>
+            </datalist>
+          </div>
+
+          <div class="span-2">
+            <label for="workLocation">مكان العمل داخل المحطة</label>
+            <input type="text" id="workLocation" placeholder="مثال: لوحة VFD طلمبة 2 / غرفة المحابس / كابينة PLC" required />
+          </div>
+          <div>
+            <label for="faultStatus">حالة العطل</label>
+            <select id="faultStatus" required>
+              <option value="مقفول">مقفول (تم الإصلاح)</option>
+              <option value="مفتوح">مفتوح (جاري العمل / متابعة)</option>
+            </select>
+          </div>
+          <div>
+            <label for="technicianName">الفني الذي قام بالعمل</label>
+            <input type="text" id="technicianName" placeholder="اكتب اسم الفني" required />
+          </div>
+
+          <div class="span-2">
+            <label for="faultDesc">العطل</label>
+            <input type="text" id="faultDesc" placeholder="اكتب وصف العطل أو كود الإنذار..." required />
+          </div>
+          <div class="span-2">
+            <label for="actionTaken">ما تم عمله</label>
+            <textarea id="actionTaken" placeholder="اكتب ما تم تنفيذه من فحص أو إصلاح أو تشغيل..." required></textarea>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="saveBtn">حفظ السجل في المنظومة</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">
+        <span>سجل المتابعة اليومي المباشر</span>
+        <small id="recordCountLabel" style="color:var(--muted); font-size:12px;">0 سجل معروض</small>
+      </div>
+
+      <div class="filters">
+        <input type="date" id="filterDate" onchange="renderAll()" title="فلترة بالتاريخ" />
+        <input type="text" id="filterZone" oninput="renderAll()" placeholder="بحث بالزونة..." />
+        <input type="text" id="filterStation" oninput="renderAll()" placeholder="بحث بالمحطة..." />
+        <input type="text" id="filterTech" oninput="renderAll()" placeholder="بحث باسم الفني..." />
+        <select id="filterStatus" onchange="renderAll()">
+          <option value="">كل الحالات</option>
+          <option value="مفتوح">مفتوح فقط</option>
+          <option value="مقفول">مقفول فقط</option>
+        </select>
+      </div>
+
+      <div class="table-box">
+        <table>
+          <thead>
             <tr>
-                <th>التاريخ</th>
-                <th>الوصف</th>
+              <th>التاريخ</th>
+              <th>الوقت</th>
+              <th>الزونة</th>
+              <th>المحطة</th>
+              <th>مكان العمل</th>
+              <th>العطل</th>
+              <th>ما تم عمله</th>
+              <th>الحالة</th>
+              <th>الفني</th>
+              <th class="no-print">إجراء</th>
             </tr>
-        </thead>
-        <tbody id="faultsTableBody"></tbody>
-    </table>
-</div>
+          </thead>
+          <tbody id="recordsBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", loadFaults);
+  <!-- نافذة قفل عطل مفتوح -->
+  <div class="modal-backdrop" id="closeModal">
+    <div class="modal-card">
+      <h3>إغلاق العطل وتسجيل ما تم عمله</h3>
+      <input type="hidden" id="closeRecordId" />
+      <div style="margin-bottom:10px">
+        <label for="closeTechInput">اسم الفني الذي أنهى العطل</label>
+        <input type="text" id="closeTechInput" required />
+      </div>
+      <div style="margin-bottom:14px">
+        <label for="closeActionInput">ما تم عمله لإغلاق العطل</label>
+        <textarea id="closeActionInput" required></textarea>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-close-fault" style="flex:1; padding:10px" onclick="confirmCloseRecord()">تأكيد قفل العطل</button>
+        <button class="btn" style="background:#334155; flex:1" onclick="closeModal('closeModal')">إلغاء</button>
+      </div>
+    </div>
+  </div>
 
-    function saveFault() {
-        const date = document.getElementById("faultDate").value;
-        const desc = document.getElementById("faultDesc").value;
+  <!-- نافذة ملخص آخر اليوم -->
+  <div class="modal-backdrop" id="summaryModal">
+    <div class="modal-card">
+      <h3>ملخص أعمال آخر اليوم</h3>
+      <div id="summaryContent"></div>
+      <button class="btn btn-primary" onclick="closeModal('summaryModal')">إغلاق النافذة</button>
+    </div>
+  </div>
 
-        if (!date || !desc) {
-            alert("يرجى ملء جميع الحقول.");
-            return;
+  <script>
+    // اختياري: ضع رابط قاعدة بيانات سحابية (مثل Firebase Realtime Database) هنا لمشاركة البيانات بين جميع الأجهزة لحظياً
+    // مثال: const CLOUD_DB_URL = "https://your-project-default-rtdb.firebaseio.com";
+    const CLOUD_DB_URL = "";
+
+    const STORAGE_KEY = "scada_station_faults_v1";
+    let records = [];
+
+    function setDefaultDateTime() {
+      const now = new Date();
+      document.getElementById("faultDate").value = now.toISOString().split("T")[0];
+      document.getElementById("faultTime").value = now.toTimeString().slice(0, 5);
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = "none";
+    }
+
+    async function loadRecords() {
+      if (CLOUD_DB_URL) {
+        try {
+          const resp = await fetch(`${CLOUD_DB_URL}/records.json`);
+          const data = await resp.json();
+          records = data ? Object.keys(data).map((key) => ({ id: key, ...data[key] })).reverse() : [];
+        } catch (err) {
+          console.error("تعذر الاتصال بقاعدة البيانات السحابية:", err);
         }
-
-        const newFault = { date, desc };
-        const faults = JSON.parse(localStorage.getItem("stationFaults") || "[]");
-        faults.push(newFault);
-        localStorage.setItem("stationFaults", JSON.stringify(faults));
-
-        document.getElementById("faultDate").value = "";
-        document.getElementById("faultDesc").value = "";
-
-        loadFaults();
+      } else {
+        records = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      }
+      renderAll();
     }
 
-    function loadFaults() {
-        const faults = JSON.parse(localStorage.getItem("stationFaults") || "[]");
-        const tbody = document.getElementById("faultsTableBody");
-        tbody.innerHTML = "";
-
-        faults.forEach(fault => {
-            const row = tbody.insertRow();
-            row.insertCell(0).innerText = fault.date;
-            row.insertCell(1).innerText = fault.desc;
+    async function saveNewRecord(item) {
+      if (CLOUD_DB_URL) {
+        await fetch(`${CLOUD_DB_URL}/records.json`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item)
         });
+      } else {
+        item.id = "rec_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+        records.unshift(item);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      }
     }
-</script>
 
-</body>
-</html>
+    document.getElementById("faultForm").add
