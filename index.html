@@ -1,433 +1,83 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daily Operations Log - Toshka Stations - I&C Dept</title>
-  <style>
-    :root {
-      --bg-dark: #f1f5f9;
-      --card-bg: #ffffff;
-      --primary-color: #0284c7;
-      --primary-hover: #0369a1;
-      --secondary-color: #38bdf8;
-      --text-color: #0f172a;
-      --text-muted: #64748b;
-      --border-color: #e2e8f0;
-      --open-bg: #e0f2fe;
-      --open-text: #0369a1;
-      --closed-bg: #f1f5f9;
-      --closed-text: #475569;
-      --hw-bg: #e0e7ff;
-      --hw-text: #4338ca;
-      --spares-bg: #ffedd5;
-      --spares-text: #c2410c;
-    }
-
-    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: var(--bg-dark); color: var(--text-color); margin: 0; padding: 20px; }
-
-    /* Login Overlay */
-    #loginOverlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: #0f172a; display: flex; justify-content: center;
-      align-items: center; z-index: 10000;
-    }
-    .login-card {
-      background: var(--card-bg); padding: 30px; border-radius: 12px;
-      width: 100%; max-width: 360px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center;
-      border: 1px solid var(--border-color);
-    }
-    .login-card h2 { color: var(--primary-color); margin-top: 0; font-size: 24px; }
-    .login-input { margin-bottom: 20px; text-align: left; }
-    .login-input label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
-    .login-input input {
-      width: 100%; padding: 12px; border: 1px solid var(--border-color);
-      border-radius: 6px; font-size: 14px; background: #f8fafc;
-    }
-    .login-card button {
-      background-color: var(--primary-color); color: white; padding: 12px;
-      border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;
-      width: 100%; transition: background 0.2s;
-    }
-    .login-card button:hover { background-color: var(--primary-hover); }
-    .login-footer { margin-top: 25px; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 15px; font-weight: 500; }
-
-    .container { max-width: 1200px; margin: 0 auto; }
-    
-    /* Header Section */
-    .header-panel {
-      background: var(--card-bg); border-radius: 12px; padding: 20px;
-      margin-bottom: 20px; display: flex; align-items: center; gap: 20px;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border-color);
-    }
-    .header-img {
-      width: 110px; height: 110px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color);
-    }
-    .header-text { flex-grow: 1; text-align: center; }
-    .header-text h1 { margin: 0 0 6px 0; color: var(--primary-color); font-size: 26px; font-weight: 700; }
-    .header-text h3 { margin: 0 0 12px 0; color: var(--text-muted); font-size: 18px; font-weight: 600; }
-    .supervisors { display: flex; justify-content: center; gap: 15px; font-size: 14px; font-weight: 600; }
-    .supervisor-tag {
-      background: #e0f2fe; padding: 6px 14px; border-radius: 20px; color: #0369a1; border: 1px solid #bae6fd;
-    }
-
-    /* KPI Section */
-    .kpi-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-    .kpi-card { background: var(--card-bg); padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
-    .kpi-card h4 { margin: 0 0 8px 0; color: var(--text-muted); font-size: 13px; text-transform: uppercase; font-weight: 600; }
-    .kpi-value { font-size: 28px; font-weight: 700; color: var(--primary-color); }
-
-    /* Form Section */
-    .form-panel { background: var(--card-bg); padding: 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
-    .form-panel h2 { margin-top: 0; color: var(--primary-color); font-size: 20px; border-bottom: 2px solid var(--bg-dark); padding-bottom: 12px; margin-bottom: 20px; }
-    .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-    .form-group { margin-bottom: 0; }
-    .form-group.span-2 { grid-column: span 2; }
-    .form-group.span-4 { grid-column: span 4; }
-    label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--text-color); }
-    input, select, textarea {
-      width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;
-      font-size: 14px; background-color: #f8fafc; transition: border 0.2s;
-    }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-color); background: #fff; }
-    textarea { height: 70px; resize: vertical; }
-    
-    .form-actions { grid-column: span 4; margin-top: 10px; }
-    .form-actions button {
-      background-color: var(--primary-color); color: white; padding: 12px 24px;
-      border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;
-      width: 100%; transition: background 0.2s;
-    }
-    .form-actions button:hover { background-color: var(--primary-hover); }
-
-    /* Table Section */
-    .table-panel { background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
-    .table-panel h2 { margin-top: 0; color: var(--primary-color); font-size: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg-dark); padding-bottom: 12px; margin-bottom: 20px; }
-    .filters { display: flex; gap: 10px; }
-    .filters input, .filters select { width: 160px; padding: 8px 12px; font-size: 13px; }
-    .filters button { padding: 8px 16px; font-size: 13px; border-radius: 6px; }
-
-    .table-responsive { width: 100%; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 1100px; text-align: left; font-size: 13px; }
-    th { background-color: #f8fafc; color: var(--text-color); padding: 14px 10px; border-bottom: 2px solid var(--border-color); font-weight: 600; }
-    td { padding: 14px 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; color: #334155; }
-    tr:hover { background-color: #f8fafc; }
-
-    .badge { padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: 600; display: inline-block; text-align: center; }
-    .status-open { background-color: var(--open-bg); color: var(--open-text); border: 1px solid #bae6fd; }
-    .status-closed { background-color: var(--closed-bg); color: var(--closed-text); border: 1px solid #cbd5e1; }
-    .type-hw { background-color: var(--hw-bg); color: var(--hw-text); }
-    .type-spares { background-color: var(--spares-bg); color: var(--spares-text); }
-
-    .action-btn { padding: 6px 12px; border-radius: 4px; border: none; font-size: 12px; cursor: pointer; font-weight: 600; color: white; transition: opacity 0.2s; }
-    .action-btn:hover { opacity: 0.9; }
-    .btn-close { background-color: #059669; }
-    .btn-delete { background-color: #e11d48; margin-left: 6px; }
-
-    .print-hide {}
-    @media print {
-      body { background: white; padding: 0; }
-      #loginOverlay, .form-panel, .action-btn, .print-hide { display: none !important; }
-      .container { max-width: 100%; margin: 0; }
-      .header-panel { border-left: none; border-bottom: 2px solid #0f172a; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>سجل الأعطال اليومي</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        div { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #666; }
+        input, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; background-color: #009688; color: white; padding: 10px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+        button:hover { background-color: #00796b; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: right; }
+        th { background-color: #f2f2f2; }
+    </style>
 </head>
 <body>
 
-  <div id="loginOverlay">
-    <div class="login-card">
-      <h2>System Login</h2>
-      <p style="color: var(--text-muted); margin-bottom: 20px;">Please enter your credentials</p>
-      <div class="login-input">
-        <label>Username</label>
-        <input type="text" id="userIn">
-      </div>
-      <div class="login-input">
-        <label>Password</label>
-        <input type="password" id="passIn">
-      </div>
-      <button onclick="handleLogin()">Enter</button>
-      <div class="login-footer">Implemented by Ahmed Nour</div>
+<div class="container">
+    <h2>تسجيل الأعطال اليومي</h2>
+    <div>
+        <label for="faultDate">التاريخ:</label>
+        <input type="date" id="faultDate">
     </div>
-  </div>
-
-  <div class="container">
-    <div class="header-panel">
-      <img src="https://images.unsplash.com/photo-1590856029826-c7a73142bfa1?auto=format&fit=crop&w=400&q=80" alt="Pump Station" class="header-img">
-      <div class="header-text">
-        <h1>Daily Operations Log - Toshka Stations</h1>
-        <h3>Instrumentation & Control Department</h3>
-        <div class="supervisors">
-          <span class="supervisor-tag">Supervisor: Mahmoud Hamdan</span>
-          <span class="supervisor-tag">Supervisor: Ahmed Nour</span>
-        </div>
-      </div>
+    <div>
+        <label for="faultDesc">وصف العطل:</label>
+        <textarea id="faultDesc" rows="4" placeholder="اكتب تفاصيل العطل هنا..."></textarea>
     </div>
+    <button onclick="saveFault()">حفظ العطل</button>
 
-    <div class="kpi-container">
-      <div class="kpi-card"><h4>Total Tasks</h4><div id="kpiTotal" class="kpi-value">0</div></div>
-      <div class="kpi-card"><h4>Open</h4><div id="kpiOpen" class="kpi-value">0</div></div>
-      <div class="kpi-card"><h4>Closed</h4><div id="kpiClosed" class="kpi-value">0</div></div>
-      <div class="kpi-card"><h4>Tasks Today</h4><div id="kpiToday" class="kpi-value" style="color: #0284c7;">0</div></div>
-    </div>
-
-    <div class="form-panel print-hide">
-      <h2>Log New Task / Fault</h2>
-      <form id="workForm" onsubmit="handleFormSubmit(event)">
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="startDate">Start Date *</label>
-            <input type="date" id="startDate" required>
-          </div>
-          <div class="form-group">
-            <label for="endDate">End Date *</label>
-            <input type="date" id="endDate" required>
-          </div>
-          <div class="form-group">
-            <label for="zoneName">Zone *</label>
-            <input type="text" id="zoneName" required>
-          </div>
-          <div class="form-group">
-            <label for="stationName">Station *</label>
-            <input type="text" id="stationName" required>
-          </div>
-          
-          <div class="form-group span-2">
-            <label for="locationDetailed">Location Detailed *</label>
-            <input type="text" id="locationDetailed" required>
-          </div>
-          <div class="form-group span-2">
-            <label for="equipmentName">Equipment *</label>
-            <input type="text" id="equipmentName" required>
-          </div>
-
-          <div class="form-group">
-            <label for="faultStatus">Status *</label>
-            <select id="faultStatus" onchange="toggleCloseActions()">
-              <option value="Open">Open</option>
-              <option value="Closed">Closed</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="issueType">Issue Type *</label>
-            <select id="issueType">
-              <option value="Hardware">Hardware</option>
-              <option value="Spare Parts">Spare Parts</option>
-            </select>
-          </div>
-          <div class="form-group span-2">
-            <label for="technicianName">Technician *</label>
-            <input type="text" id="technicianName" required>
-          </div>
-
-          <div class="form-group span-4">
-            <label for="faultDescription">Description of Fault / Problem *</label>
-            <textarea id="faultDescription" required></textarea>
-          </div>
-          <div class="form-group span-4" id="actionTakenGroup" style="display: none;">
-            <label for="actionTaken">Actions Taken *</label>
-            <textarea id="actionTaken"></textarea>
-          </div>
-          
-          <div class="form-actions">
-            <button type="submit">Submit Record</button>
-          </div>
-        </div>
-      </form>
-    </div>
-
-    <div class="table-panel">
-      <h2>
-        <span>Daily Operations Log</span>
-        <div class="filters print-hide">
-          <input type="date" id="filterDate" onchange="filterRecords()">
-          <input type="text" id="filterSearch" placeholder="Search..." onkeyup="filterRecords()">
-          <button onclick="exportCSV()" style="background-color: #475569; color: white; border: none; cursor: pointer;">Export CSV</button>
-          <button onclick="window.print()" style="background-color: var(--primary-color); color: white; border: none; cursor: pointer;">Print</button>
-        </div>
-      </h2>
-      <div class="table-responsive">
-        <table>
-          <thead>
+    <h3>الأعطال المسجلة</h3>
+    <table>
+        <thead>
             <tr>
-              <th>Dates</th>
-              <th>Zone/Station</th>
-              <th>Location</th>
-              <th>Equipment</th>
-              <th>Fault</th>
-              <th>Tech</th>
-              <th>Type</th>
-              <th>Status</th>
-              <th>Action Taken</th>
-              <th class="print-hide">Control</th>
+                <th>التاريخ</th>
+                <th>الوصف</th>
             </tr>
-          </thead>
-          <tbody id="recordsBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+        </thead>
+        <tbody id="faultsTableBody"></tbody>
+    </table>
+</div>
 
-  <script>
-    const CONFIG = { username: "admin", password: "admin", storageKey: "toshka_ic_luxury_records_v1" };
-    let records = [];
+<script>
+    document.addEventListener("DOMContentLoaded", loadFaults);
 
-    window.onload = function() {
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('startDate').value = today;
-      document.getElementById('endDate').value = today;
-      document.getElementById('filterDate').value = today;
-      loadRecords();
-    };
+    function saveFault() {
+        const date = document.getElementById("faultDate").value;
+        const desc = document.getElementById("faultDesc").value;
 
-    function handleLogin() {
-      if (document.getElementById('userIn').value === CONFIG.username && document.getElementById('passIn').value === CONFIG.password) {
-        document.getElementById('loginOverlay').style.display = 'none';
-      } else {
-        alert('Invalid credentials.');
-      }
+        if (!date || !desc) {
+            alert("يرجى ملء جميع الحقول.");
+            return;
+        }
+
+        const newFault = { date, desc };
+        const faults = JSON.parse(localStorage.getItem("stationFaults") || "[]");
+        faults.push(newFault);
+        localStorage.setItem("stationFaults", JSON.stringify(faults));
+
+        document.getElementById("faultDate").value = "";
+        document.getElementById("faultDesc").value = "";
+
+        loadFaults();
     }
 
-    function toggleCloseActions() {
-      const g = document.getElementById('actionTakenGroup');
-      const a = document.getElementById('actionTaken');
-      if (document.getElementById('faultStatus').value === 'Closed') {
-        g.style.display = 'block'; a.required = true;
-      } else {
-        g.style.display = 'none'; a.required = false; a.value = '';
-      }
+    function loadFaults() {
+        const faults = JSON.parse(localStorage.getItem("stationFaults") || "[]");
+        const tbody = document.getElementById("faultsTableBody");
+        tbody.innerHTML = "";
+
+        faults.forEach(fault => {
+            const row = tbody.insertRow();
+            row.insertCell(0).innerText = fault.date;
+            row.insertCell(1).innerText = fault.desc;
+        });
     }
-
-    function handleFormSubmit(e) {
-      e.preventDefault();
-      const newRecord = {
-        id: 'rec_' + Date.now(),
-        startDate: document.getElementById('startDate').value,
-        endDate: document.getElementById('endDate').value,
-        zone: document.getElementById('zoneName').value,
-        station: document.getElementById('stationName').value,
-        location: document.getElementById('locationDetailed').value,
-        equipment: document.getElementById('equipmentName').value,
-        status: document.getElementById('faultStatus').value,
-        issueType: document.getElementById('issueType').value,
-        technician: document.getElementById('technicianName').value,
-        description: document.getElementById('faultDescription').value,
-        actionTaken: document.getElementById('actionTaken').value || 'Pending action'
-      };
-      records.unshift(newRecord);
-      saveRecords();
-      renderTable();
-      document.getElementById('workForm').reset();
-      toggleCloseActions();
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('startDate').value = today;
-      document.getElementById('endDate').value = today;
-    }
-
-    function saveRecords() { localStorage.setItem(CONFIG.storageKey, JSON.stringify(records)); }
-    function loadRecords() { records = JSON.parse(localStorage.getItem(CONFIG.storageKey) || "[]"); renderTable(); }
-
-    function closeRecord(id) {
-      const r = records.find(r => r.id === id);
-      if (r) {
-        const act = prompt("Enter action taken to close fault:");
-        if (act) { r.status = 'Closed'; r.actionTaken = act; saveRecords(); renderTable(); }
-      }
-    }
-
-    function deleteRecord(id) {
-      if (confirm('Delete this record?')) {
-        records = records.filter(r => r.id !== id);
-        saveRecords();
-        renderTable();
-      }
-    }
-
-    function renderTable(dataToRender) {
-      const list = dataToRender || records;
-      const tbody = document.getElementById('recordsBody');
-      tbody.innerHTML = '';
-      let total = list.length, open = 0, closed = 0;
-      const today = document.getElementById('filterDate').value;
-      let todayCount = 0;
-
-      list.forEach(r => {
-        if(r.status === 'Open') open++;
-        if(r.status === 'Closed') closed++;
-        if(r.endDate === today) todayCount++;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${r.startDate}<br><small style="color:var(--text-muted)">to ${r.endDate}</small></td>
-          <td><strong>${r.zone}</strong><br>${r.station}</td>
-          <td>${r.location}</td>
-          <td>${r.equipment}</td>
-          <td>${r.description}</td>
-          <td>${r.technician}</td>
-          <td><span class="badge type-${r.issueType === 'Hardware' ? 'hw' : 'spares'}">${r.issueType}</span></td>
-          <td><span class="badge status-${r.status.toLowerCase()}">${r.status}</span></td>
-          <td>${r.actionTaken}</td>
-          <td class="print-hide">
-            ${r.status !== 'Closed' ? `<button class="action-btn btn-close" onclick="closeRecord('${r.id}')">Done</button>` : ''}
-            <button class="action-btn btn-delete" onclick="deleteRecord('${r.id}')">Delete</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      document.getElementById('kpiTotal').innerText = total;
-      document.getElementById('kpiOpen').innerText = open;
-      document.getElementById('kpiClosed').innerText = closed;
-      document.getElementById('kpiToday').innerText = todayCount;
-    }
-
-    function filterRecords() {
-      const dateVal = document.getElementById('filterDate').value;
-      const searchVal = document.getElementById('filterSearch').value.toLowerCase();
-      const filtered = records.filter(r => {
-        const matchesDate = !dateVal || r.endDate === dateVal;
-        const matchesSearch = !searchVal || 
-          r.station.toLowerCase().includes(searchVal) || r.zone.toLowerCase().includes(searchVal) ||
-          r.equipment.toLowerCase().includes(searchVal) || r.technician.toLowerCase().includes(searchVal) ||
-          r.description.toLowerCase().includes(searchVal);
-        return matchesDate && matchesSearch;
-      });
-      renderTable(filtered);
-    }
-
-    function exportCSV() {
-      if(records.length === 0) { alert("No data to export."); return; }
-      let csvContent = "\uFEFF"; 
-      const headers = ["Start Date", "End Date", "Zone", "Station", "Location", "Equipment", "Status", "Issue Type", "Technician", "Description", "Action Taken"];
-      csvContent += headers.join(",") + "\r\n";
-      records.forEach(r => {
-        const row = [r.startDate, r.endDate, r.zone, r.station, r.location, r.equipment, r.status, r.issueType, r.technician, `"${r.description.replace(/"/g, '""')}"`, `"${r.actionTaken.replace(/"/g, '""')}"`];
-        csvContent += row.join(",") + "\r\n";
-      });
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `Toshka_IC_Daily_Log_${document.getElementById('filterDate').value}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  </script>
-<script type="module">
-  import { db, ref, push, onValue } from "./firebase.js";
-
-  const faultsRef = ref(db, "faults");
-
-  onValue(faultsRef, (snapshot) => {
-    const data = snapshot.val() || {};
-    records = Object.values(data);
-    if (typeof renderTable === "function") {
-      renderTable(records);
-    }
-  });
 </script>
+
 </body>
 </html>
